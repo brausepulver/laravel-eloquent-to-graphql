@@ -1,5 +1,6 @@
 {
     "name": "brausepulver/laravel-eloquent-to-graphql",
+    "description": "Automatically turn Eloquent models into GraphQL",
     "type": "library",
     "require": {
         "illuminate/support": "^9.1",
