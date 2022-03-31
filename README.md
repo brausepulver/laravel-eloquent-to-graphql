@@ -1,6 +1,8 @@
 # laravel-eloquent-to-graphql
 
-![Tests](https://github.com/brausepulver/laravel-eloquent-to-graphql/actions/workflows/tests.yml/badge.svg)
+[![Tests](https://github.com/brausepulver/laravel-eloquent-to-graphql/actions/workflows/tests.yml/badge.svg)](https://https://github.com/brausepulver/laravel-eloquent-to-graphql/actions)
+[![Latest Stable Version](https://img.shields.io/packagist/v/brausepulver/laravel-eloquent-to-graphql)](https://packagist.org/packages/brausepulver/laravel-eloquent-to-graphql)
+[![License](https://img.shields.io/packagist/l/brausepulver/laravel-eloquent-to-graphql?color=9cf)](https://packagist.org/packages/brausepulver/laravel-eloquent-to-graphql)
 
 This package automatically turns your Eloquent models into a GraphQL schema.
 
