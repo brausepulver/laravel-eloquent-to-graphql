@@ -4,7 +4,7 @@
 [![Latest Stable Version](https://img.shields.io/packagist/v/brausepulver/laravel-eloquent-to-graphql)](https://packagist.org/packages/brausepulver/laravel-eloquent-to-graphql)
 [![License](https://img.shields.io/static/v1?label=license&message=MIT&color=9cf)](https://packagist.org/packages/brausepulver/laravel-eloquent-to-graphql)
 
-This package automatically turns your Eloquent models into a GraphQL schema.
+This package generates a static GraphQL schema from your Eloquent models.
 
 It is suggested to be used with [lighthouse](https://lighthouse-php.com/).
 
