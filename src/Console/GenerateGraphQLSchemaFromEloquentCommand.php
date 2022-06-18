@@ -108,6 +108,7 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
         {--exclude-relationships= : Method names, e.g. user,audits}
         {--include-models= : Namespaced model names, e.g. MyPackage\\\\Models\\\\Model}
         {--exclude-models= : e.g. Audit}
+        {--ignore-empty : Do not write empty object types to schema}
     ';
 
     /**
@@ -519,6 +520,7 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
             explode(',',$this->option('exclude-models')),
             fn ($v) => "" !== $v
         );
+        $ignoreEmpty = $this->option('ignore-empty');
 
         // Create file/directory
         if (!$this->tryCreateDirectoryOrFile($inDirectory, !$force)) {
@@ -588,8 +590,13 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
             }
 
             // Save schemas
+            $fields = array_merge($secondFields, $firstFields);
+            if ($ignoreEmpty && empty($fields)) {
+                continue;
+            }
+
             $modelClassName = self::getModelClassName($model);
-            $schemaPart = self::createModelSchema($modelClassName, array_merge($secondFields, $firstFields), $indentation);
+            $schemaPart = self::createModelSchema($modelClassName, $fields, $indentation);
 
             if (!$inDirectory && $model !== end($models)) {
                 $schemaPart .= "\n";

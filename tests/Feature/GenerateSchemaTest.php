@@ -428,4 +428,15 @@ EOF;
             '--exclude-relationships' => implode(',', array_merge(self::$nullableRelationships, self::$nonNullableRelationships))
         ]);
     }
+
+    public function testIgnoreEmptyObjectTypes()
+    {
+        File::shouldNotReceive('append');
+
+        $this->artisan('e2gql', [
+            '--exclude-columns' => implode(',', ['id', 'created_at', 'updated_at', 'dummy_column_1', 'dummy_column_2', 'dummy_column_3']),
+            '--exclude-relationships' => implode(',', array_merge(self::$nullableRelationships, self::$nonNullableRelationships)),
+            '--ignore-empty' => true
+        ]);
+    }
 }
