@@ -244,13 +244,13 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
      * Get the class name of a model.
      * 
      * @param  string $model Absolute model namespace name; e.g. App\Models\User
-     * @return string        e.g. User
+     * @return string|null   e.g. User
      */
-    private static function getModelClassName(string $model): string
+    private static function getModelClassName(string $model): ?string
     {
         $matches = [];
         preg_match("/\\\\(\w+)$/", $model, $matches);
-        return $matches[1];
+        return $matches[1] ?? null; // Do not issue warning if no match
     }
 
     /**
@@ -527,21 +527,27 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
         }
 
         // Prepare data relating to models
-        $defaultModels = self::getModels();
-        $models = array_merge($defaultModels, $includeModels);
+        $models = self::getModels();
+
+        if (!empty($excludeModels)) {
+            $models = array_filter(
+                $models,
+                fn ($model) =>
+                    !(in_array($model, $excludeModels) || in_array(self::getModelClassName($model), $excludeModels))
+            );
+        }
+
+        $models = array_merge($models, $includeModels);
         $modelRelations = self::getModelRelations($models);
-        // dd(array_map(fn ($k, $v) => array_map(fn ($k, $v) => get_class($v), array_keys($v), array_values($v)), array_keys($modelRelations), array_values($modelRelations)));
         $modelTables = self::getModelTables($models);
 
         if (!empty($argumentModels)) {
             $models = array_filter(
-                $defaultModels,
+                $models,
                 fn ($model) =>
                     in_array($model, $argumentModels) ||
-                    in_array(self::getModelClassName($model), $argumentModels) && !(
-                        in_array($model, $excludeModels) ||
-                        in_array(self::getModelClassName($model), $excludeModels)
-                    ));
+                    in_array(self::getModelClassName($model), $argumentModels)
+            );
             $models = array_merge($models, $includeModels);
         }
 
