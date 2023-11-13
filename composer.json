@@ -1,5 +1,5 @@
 {
-    "name": "brausepulver/laravel-eloquent-to-graphql",
+    "name": "decowood/laravel-eloquent-to-graphql",
     "description": "Automatically turn Eloquent models into GraphQL",
     "type": "library",
     "require": {
@@ -9,8 +9,8 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "brausepulver",
-            "email": "brausepulver@cock.li"
+            "name": "decowood",
+            "email": "it@decowood.es"
         }
     ],
     "autoload": {
