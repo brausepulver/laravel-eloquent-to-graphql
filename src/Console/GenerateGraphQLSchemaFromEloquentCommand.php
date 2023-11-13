@@ -57,7 +57,7 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
     private static $graphQLTypeMap = [
         SmallIntType::class => "Int",
         IntegerType::class => "Int",
-        BigIntType::class => "Int",
+        BigIntType::class => "Float",
         DecimalType::class => "String",
         FloatType::class => "Float",
         StringType::class => "String",
@@ -109,6 +109,7 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
         {--include-models= : Namespaced model names, e.g. MyPackage\\\\Models\\\\Model}
         {--exclude-models= : e.g. Audit}
         {--ignore-empty : Do not write empty object types to schema}
+        {--include-foreign : Add foreign keys id into schema}
     ';
 
     /**
@@ -296,7 +297,7 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
      * 
      * @return GraphQLField|null
      */
-    private function getFieldForColumn(Column $column, array $foreignKeys, array $morphTos): ?GraphQLField
+    private function getFieldForColumn(Column $column, array $foreignKeys, array $morphTos, bool $includeForeign): ?GraphQLField
     {
         $columnName = $column->getName();
         $fieldNotNullable = $column->getNotNull();
@@ -313,7 +314,7 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
         }
 
         $matches = [];
-        if (preg_match("/\_id$/", $columnName) && // Foreign key constraints
+        if (!$includeForeign && preg_match("/\_id$/", $columnName) && // Foreign key constraints
             null !== self::getForeignKey($foreignKeys, $columnName)
         ) {
             return null;
@@ -521,6 +522,7 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
             fn ($v) => "" !== $v
         );
         $ignoreEmpty = $this->option('ignore-empty');
+        $includeForeign = $this->option('include-foreign');
 
         // Create file/directory
         if (!$this->tryCreateDirectoryOrFile($inDirectory, !$force)) {
@@ -583,7 +585,7 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
                     continue;
                 }
 
-                $field = $this->getFieldForColumn($column, $foreignKeys, $morphTos);
+                $field = $this->getFieldForColumn($column, $foreignKeys, $morphTos, $includeForeign);
                 if (isset($field)) {
                     $secondFields[] = $field;
                 }
