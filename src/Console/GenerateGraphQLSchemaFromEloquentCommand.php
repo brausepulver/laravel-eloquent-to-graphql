@@ -564,6 +564,10 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
         }
 
         foreach ($models as $model) {
+            $modelInstance = new $model;
+            $connectionName = $modelInstance->getConnectionName();
+            $schema = DB::connection($connectionName)->getDoctrineSchemaManager();
+            
             $table = $modelTables[$model];
             $foreignKeys = $schema->listTableForeignKeys($table);
             $columns = $schema->listTableColumns($table);
