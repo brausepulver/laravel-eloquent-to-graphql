@@ -57,7 +57,7 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
     private static $graphQLTypeMap = [
         SmallIntType::class => "Int",
         IntegerType::class => "Int",
-        BigIntType::class => "Float",
+        BigIntType::class => "String",
         DecimalType::class => "String",
         FloatType::class => "Float",
         StringType::class => "String",
