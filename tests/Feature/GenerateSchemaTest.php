@@ -58,7 +58,7 @@ final class GenerateSchemaTest extends TestCase
             ->once()
             ->with('/vendor/composer/autoload_classmap.php')
             ->andReturn(__DIR__.'/../vendor/composer/autoload_classmap.php');
-        
+
         App::shouldReceive('basePath')
             ->with('graphql/generated.graphql')
             ->andReturn('');
@@ -140,7 +140,8 @@ EOF;
 
         $this->artisan('e2gql', [
             'model' => ['FirstDummy', 'EighthDummy', 'NinthDummy', 'TenthDummy'],
-            '--exclude-relationships' => 'externalDummy' . ',' . implode(',', self::$nullableRelationships)
+            '--exclude-relationships' => 'externalDummy' . ',' . implode(',', self::$nullableRelationships),
+            '--exclude-foreign-keys' => true
         ])->assertSuccessful();
     }
 
@@ -184,11 +185,12 @@ EOF;
             ->once()
                 ->with('', $part);
         }
-        
+
         $this->artisan('e2gql', [
             'model' => ['FirstDummy'],
             '--include-models' => 'MyPackage\\Models\\ExternalDummy',
-            '--exclude-relationships' => implode(',', self::$nullableRelationships)
+            '--exclude-relationships' => implode(',', self::$nullableRelationships),
+            '--exclude-foreign-keys' => true
         ])->assertSuccessful();
     }
 
@@ -199,7 +201,8 @@ EOF;
         $this->artisan('e2gql', [
             'model' => ['FirstDummy'],
             '--include-models' => 'ExternalDummy',
-            '--exclude-relationships' => implode(',', self::$nullableRelationships)
+            '--exclude-relationships' => implode(',', self::$nullableRelationships),
+            '--exclude-foreign-keys' => true
         ])->assertFailed();
     }
 
@@ -230,11 +233,12 @@ EOF;
         File::shouldReceive('append')
             ->once()
             ->with('', $part);
-    
+
         $this->artisan('e2gql', [
             'model' => ['FirstDummy', 'SecondDummy'],
             '--exclude-models' => 'SecondDummy',
-            '--exclude-relationships' => implode(',', self::$nullableRelationships)
+            '--exclude-relationships' => implode(',', self::$nullableRelationships),
+            '--exclude-foreign-keys' => true
         ]);
     }
 
@@ -278,12 +282,13 @@ EOF;
             ->once()
                 ->with('', $part);
         }
-    
+
         $this->artisan('e2gql', [
             'model' => ['FirstDummy'],
             '--include-models' => '\\MyPackage\\Models\\ExternalDummy',
             '--exclude-models' => '\\MyPackage\\Models\\ExternalDummy',
-            '--exclude-relationships' => implode(',', self::$nullableRelationships)
+            '--exclude-relationships' => implode(',', self::$nullableRelationships),
+            '--exclude-foreign-keys' => true
         ]);
     }
 
@@ -326,10 +331,11 @@ EOF;
         File::shouldReceive('append')
             ->once()
             ->with('', $part);
-    
+
         $this->artisan('e2gql', [
             'model' => ['FirstDummy'],
-            '--exclude-relationships' => 'externalDummy'
+            '--exclude-relationships' => 'externalDummy',
+            '--exclude-foreign-keys' => true
         ]);
     }
 
@@ -351,7 +357,8 @@ EOF;
         $this->artisan('e2gql', [
             'model' => ['FirstDummy'],
             '--exclude-columns' => implode(',', ['id', 'created_at', 'updated_at']),
-            '--exclude-relationships' => implode(',', array_merge(self::$nullableRelationships, self::$nonNullableRelationships))
+            '--exclude-relationships' => implode(',', array_merge(self::$nullableRelationships, self::$nonNullableRelationships)),
+            '--exclude-foreign-keys' => true
         ]);
     }
 
@@ -425,7 +432,8 @@ EOF;
 
         $this->artisan('e2gql', [
             '--exclude-columns' => implode(',', ['id', 'created_at', 'updated_at', 'dummy_column_1', 'dummy_column_2', 'dummy_column_3']),
-            '--exclude-relationships' => implode(',', array_merge(self::$nullableRelationships, self::$nonNullableRelationships))
+            '--exclude-relationships' => implode(',', array_merge(self::$nullableRelationships, self::$nonNullableRelationships)),
+            '--exclude-foreign-keys' => true
         ]);
     }
 
@@ -436,7 +444,8 @@ EOF;
         $this->artisan('e2gql', [
             '--exclude-columns' => implode(',', ['id', 'created_at', 'updated_at', 'dummy_column_1', 'dummy_column_2', 'dummy_column_3']),
             '--exclude-relationships' => implode(',', array_merge(self::$nullableRelationships, self::$nonNullableRelationships)),
-            '--ignore-empty' => true
+            '--ignore-empty' => true,
+            '--exclude-foreign-keys' => true
         ]);
     }
 }
