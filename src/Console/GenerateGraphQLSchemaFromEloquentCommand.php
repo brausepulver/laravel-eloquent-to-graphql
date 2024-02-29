@@ -305,9 +305,10 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
 
         // Determine if column is primary key, foreign key, or polymorphic key
         $isPrimaryKey = "id" === $columnName;
-        $isForeignKey = null !== self::getForeignKey($foreignKeys, $columnName);
 
         $matches = [];
+        $isForeignKey = preg_match("/\_id$/", $columnName) && null !== self::getForeignKey($foreignKeys, $columnName);
+
         $isPolymorphicIdKey = preg_match("/^(\w+)_id$/", $columnName, $matches) && in_array($matches[1], $morphTos);
         $isPolymorphicTypeKey = preg_match("/^(\w+)_type$/", $columnName, $matches) && in_array($matches[1], $morphTos);
         $isPolymorphicKey = $isPolymorphicIdKey || $isPolymorphicTypeKey;
