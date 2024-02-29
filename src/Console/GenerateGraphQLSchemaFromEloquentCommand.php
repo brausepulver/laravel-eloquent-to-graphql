@@ -109,7 +109,7 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
         {--include-models= : Namespaced model names, e.g. MyPackage\\\\Models\\\\Model}
         {--exclude-models= : e.g. Audit}
         {--ignore-empty : Do not write empty object types to schema}
-        {--include-foreign : Add foreign keys id into schema}
+        {--include-foreign : Add foreign keys into schema}
     ';
 
     /**
@@ -166,8 +166,7 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
         $classes = include App::basePath('/vendor/composer/autoload_classmap.php');
 
         return array_filter(array_keys($classes), fn ($class) => (
-            preg_match("/^$rootNamespace\\/", $class) && 
-            is_subclass_of($class, Model::class)
+            preg_match("/^$rootNamespace\\/", $class) && is_subclass_of($class, Model::class)
         ));
     }
 
@@ -294,42 +293,44 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
      * @param Column                      $column      Column to get the GraphQL field for
      * @param array<ForeignKeyConstraint> $foreignKeys Foreign key constraints on the column's table
      * @param array<string>               $morphTos    Names of polymorphic relationships on the table
+     * @param string                      $table       Name of the table the column belongs to
      * 
      * @return GraphQLField|null
      */
-    private function getFieldForColumn(Column $column, array $foreignKeys, array $morphTos, bool $includeForeign): ?GraphQLField
+    private function getFieldForColumn(Column $column, array $foreignKeys, array $morphTos, bool $includeForeign, string $table): ?GraphQLField
     {
         $columnName = $column->getName();
         $fieldNotNullable = $column->getNotNull();
 
-        if ("id" === $columnName) {
-            return new GraphQLField( 
-                $columnName,
-                "ID",
-                $fieldNotNullable,
-                [], // Scalar-type fields do not have directives currently.
-                false,
-                false
-            );
-        }
+        $isPrimaryKey = "id" === $columnName;
+        $isForeignKey = null !== self::getForeignKey($foreignKeys, $columnName);
 
         $matches = [];
-        if (!$includeForeign && preg_match("/\_id$/", $columnName) && // Foreign key constraints
-            null !== self::getForeignKey($foreignKeys, $columnName)
-        ) {
-            return null;
-        } else if (( // Polymorphic relationships
-                preg_match("/^(\w+)\_id$/", $columnName, $matches) ||
-                preg_match("/^(\w+)\_type$/", $columnName, $matches)
-            ) &&
-            in_array($matches[1], $morphTos)
-        ) {
+        $isPolymorphicIdKey = preg_match("/^(\w+)_id$/", $columnName, $matches) && in_array($matches[1], $morphTos);
+        $isPolymorphicTypeKey = preg_match("/^(\w+)_type$/", $columnName, $matches) && in_array($matches[1], $morphTos);
+        $isPolymorphicKey = $isPolymorphicIdKey || $isPolymorphicTypeKey;
+
+        if ((!$includeForeign && $isForeignKey) || $isPolymorphicKey) {
             return null;
         }
 
-        return new GraphQLField( 
+        if ($isPrimaryKey || ($isForeignKey && $includeForeign)) {
+            $type = "ID";
+        } else {
+            $type = self::getGraphQLTypeForColumnType($column->getType());
+        }
+
+        if (null === $type) {
+            $message = "No matching GraphQL type found for column type " . get_class($column->getType()) .
+                " in column " . $column->getName() .
+                " of table " . $table;
+            $message .= "\nPlease register a custom type mapping in the configuration file.";
+            throw new \InvalidArgumentException($message);
+        }
+
+        return new GraphQLField(
             $columnName,
-            self::getGraphQLTypeForColumnType($column->getType()),
+            $type,
             $fieldNotNullable,
             [], // Scalar-type fields do not have directives currently.
             false,
@@ -431,11 +432,11 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
         if (in_array($methodName, $excludedRelations)) {
             return null;
         }
-        
+
         if ($relation instanceof MorphOneOrMany && in_array(get_class($relation->getRelated()), $models)) {
             $unionTypes[$morphType][] = self::getModelClassName($relation->getMorphClass()); // Add to union type only if relationship was not excluded
         }
-        
+
         $directive = self::$graphQLRelationshipDirectiveMap[get_class($relation)];
 
         // Check if GraphQL field is of array type
@@ -567,7 +568,7 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
             $modelInstance = new $model;
             $connectionName = $modelInstance->getConnectionName();
             $schema = DB::connection($connectionName)->getDoctrineSchemaManager();
-            
+
             $table = $modelTables[$model];
             $foreignKeys = $schema->listTableForeignKeys($table);
             $columns = $schema->listTableColumns($table);
@@ -589,7 +590,7 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
                     continue;
                 }
 
-                $field = $this->getFieldForColumn($column, $foreignKeys, $morphTos, $includeForeign);
+                $field = $this->getFieldForColumn($column, $foreignKeys, $morphTos, $includeForeign, $table);
                 if (isset($field)) {
                     $secondFields[] = $field;
                 }
