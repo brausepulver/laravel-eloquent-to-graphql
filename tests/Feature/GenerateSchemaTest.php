@@ -141,7 +141,8 @@ EOF;
         $this->artisan('e2gql', [
             'model' => ['FirstDummy', 'EighthDummy', 'NinthDummy', 'TenthDummy'],
             '--exclude-relationships' => 'externalDummy' . ',' . implode(',', self::$nullableRelationships),
-            '--exclude-foreign-keys' => true
+            '--exclude-foreign' => true,
+            '--exclude-polymorphic' => true
         ])->assertSuccessful();
     }
 
@@ -190,7 +191,7 @@ EOF;
             'model' => ['FirstDummy'],
             '--include-models' => 'MyPackage\\Models\\ExternalDummy',
             '--exclude-relationships' => implode(',', self::$nullableRelationships),
-            '--exclude-foreign-keys' => true
+            '--exclude-foreign' => true
         ])->assertSuccessful();
     }
 
@@ -202,7 +203,7 @@ EOF;
             'model' => ['FirstDummy'],
             '--include-models' => 'ExternalDummy',
             '--exclude-relationships' => implode(',', self::$nullableRelationships),
-            '--exclude-foreign-keys' => true
+            '--exclude-foreign' => true
         ])->assertFailed();
     }
 
@@ -238,7 +239,7 @@ EOF;
             'model' => ['FirstDummy', 'SecondDummy'],
             '--exclude-models' => 'SecondDummy',
             '--exclude-relationships' => implode(',', self::$nullableRelationships),
-            '--exclude-foreign-keys' => true
+            '--exclude-foreign' => true
         ]);
     }
 
@@ -288,7 +289,7 @@ EOF;
             '--include-models' => '\\MyPackage\\Models\\ExternalDummy',
             '--exclude-models' => '\\MyPackage\\Models\\ExternalDummy',
             '--exclude-relationships' => implode(',', self::$nullableRelationships),
-            '--exclude-foreign-keys' => true
+            '--exclude-foreign' => true
         ]);
     }
 
@@ -335,7 +336,7 @@ EOF;
         $this->artisan('e2gql', [
             'model' => ['FirstDummy'],
             '--exclude-relationships' => 'externalDummy',
-            '--exclude-foreign-keys' => true
+            '--exclude-foreign' => true
         ]);
     }
 
@@ -358,7 +359,7 @@ EOF;
             'model' => ['FirstDummy'],
             '--exclude-columns' => implode(',', ['id', 'created_at', 'updated_at']),
             '--exclude-relationships' => implode(',', array_merge(self::$nullableRelationships, self::$nonNullableRelationships)),
-            '--exclude-foreign-keys' => true
+            '--exclude-foreign' => true
         ]);
     }
 
@@ -433,7 +434,8 @@ EOF;
         $this->artisan('e2gql', [
             '--exclude-columns' => implode(',', ['id', 'created_at', 'updated_at', 'dummy_column_1', 'dummy_column_2', 'dummy_column_3']),
             '--exclude-relationships' => implode(',', array_merge(self::$nullableRelationships, self::$nonNullableRelationships)),
-            '--exclude-foreign-keys' => true
+            '--exclude-foreign' => true,
+            '--exclude-polymorphic' => true
         ]);
     }
 
@@ -445,7 +447,8 @@ EOF;
             '--exclude-columns' => implode(',', ['id', 'created_at', 'updated_at', 'dummy_column_1', 'dummy_column_2', 'dummy_column_3']),
             '--exclude-relationships' => implode(',', array_merge(self::$nullableRelationships, self::$nonNullableRelationships)),
             '--ignore-empty' => true,
-            '--exclude-foreign-keys' => true
+            '--exclude-foreign' => true,
+            '--exclude-polymorphic' => true
         ]);
     }
 }

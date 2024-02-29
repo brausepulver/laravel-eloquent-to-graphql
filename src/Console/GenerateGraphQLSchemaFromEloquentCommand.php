@@ -109,7 +109,8 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
         {--include-models= : Namespaced model names, e.g. MyPackage\\\\Models\\\\Model}
         {--exclude-models= : e.g. Audit}
         {--ignore-empty : Do not write empty object types to schema}
-        {--exclude-foreign-keys : Do not include foreign key fields in schema}
+        {--exclude-foreign : Do not include foreign key _id fields in schema}
+        {--exclude-polymorphic : Do not include polymorphic relationship key fields in schema}
     ';
 
     /**
@@ -297,7 +298,7 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
      * 
      * @return GraphQLField|null
      */
-    private function getFieldForColumn(Column $column, array $foreignKeys, array $morphTos, bool $excludeForeign, string $table): ?GraphQLField
+    private function getFieldForColumn(Column $column, array $foreignKeys, array $morphTos, bool $excludeForeign, string $table, bool $excludePolymorphic): ?GraphQLField
     {
         $columnName = $column->getName();
         $fieldNotNullable = $column->getNotNull();
@@ -312,12 +313,12 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
         $isPolymorphicKey = $isPolymorphicIdKey || $isPolymorphicTypeKey;
 
         // Exclude foreign keys and polymorphic keys if desired
-        if (($excludeForeign && $isForeignKey) || $isPolymorphicKey) {
+        if (($excludeForeign && $isForeignKey) || ($excludePolymorphic && $isPolymorphicKey)) {
             return null;
         }
 
         // Determine GraphQL type
-        if ($isPrimaryKey || $isForeignKey) {
+        if ($isPrimaryKey || $isForeignKey || $isPolymorphicIdKey) {
             $type = "ID";
         } else {
             $type = self::getGraphQLTypeForColumnType($column->getType());
@@ -526,7 +527,8 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
             fn ($v) => "" !== $v
         );
         $ignoreEmpty = $this->option('ignore-empty');
-        $excludeForeign = $this->option('exclude-foreign-keys');
+        $excludeForeign = $this->option('exclude-foreign');
+        $excludePolymorphic = $this->option('exclude-polymorphic');
 
         // Create file/directory
         if (!$this->tryCreateDirectoryOrFile($inDirectory, !$force)) {
@@ -593,7 +595,7 @@ class GenerateGraphQLSchemaFromEloquentCommand extends Command
                     continue;
                 }
 
-                $field = $this->getFieldForColumn($column, $foreignKeys, $morphTos, $excludeForeign, $table);
+                $field = $this->getFieldForColumn($column, $foreignKeys, $morphTos, $excludeForeign, $table, $excludePolymorphic);
                 if (isset($field)) {
                     $secondFields[] = $field;
                 }
